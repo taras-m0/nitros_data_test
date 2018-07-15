@@ -35,6 +35,17 @@
               </td>
           </tr>
       </tbody>
+
+        <tfoot>
+            <tr>
+                <th></th>
+                <th>{{ totals.total }}</th>
+                <th></th>
+                <th>{{ totals.time }}</th>
+                <th>{{ totals.price }}</th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
 
     <button class="bottom button-default" :disabled="!isSaved" @click="sendRows">Сохранить</button>
@@ -158,6 +169,24 @@
             , showTesks() {
                 return SortData( FilterData( this.tasks, this.filters, this.users ),
                     this.sortType, this.sortDirection, this.users );
+            }
+
+            , totals(){
+                
+                return this.showTesks.reduce((prev, task) => {
+                       const user = this.users.some( (user) => (user.id == task.user_id) ) ? // проверяем есть ли такой user
+                           this.users.find( (user) => (user.id == task.user_id) ) : { price: 0, name: '' };
+
+                       return Object.assign( prev, {
+                           time: prev.time + task.time,
+                           price: prev.price + user.price * task.time
+                       });
+                   }, {
+                       time: 0,
+                       price: 0,
+
+                       total: this.showTesks.length
+                   });
             }
         }
 }
