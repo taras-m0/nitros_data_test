@@ -6,19 +6,36 @@
         <td>{{ row.time }}</td>
         <td>{{ row.time * user.price }}</td>
         <td>
-            <button class="button button-default" @click="$emit('setedit', row.id)">
+            <Btn @click="$emit('setedit', row.id)">
                 <span class="glyphicon glyphicon-pencil"></span>
-            </button>
+            </Btn>
+
+            <Btn @click="confirm=true">
+                <span class="glyphicon glyphicon-remove"></span>
+            </Btn>
+
+            <ConfirmRemove v-model="confirm" @remove="$emit('remove', row.id)"></ConfirmRemove>
         </td>
+
     </tr>
 </template>
 
 <script>
+    import {Btn } from 'uiv';
+    import ConfirmRemove from './ConfirmRemove';
+
     export default {
         props: {
             num: Number,
             row: Object,
             user: Object
         }
+
+        , data(){
+            return {
+                confirm: false
+            }
+        }
+        , components: {  Btn, ConfirmRemove }
     }
 </script>

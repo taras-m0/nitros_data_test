@@ -3,21 +3,37 @@
 
     <table class="table table-bordered">
       <thead>
+          <tr>
           <th>N</th>
-          <th>Название</th>
-          <th>Исполнитель</th>
-          <th>Затраченное время в часах</th>
-          <th>Стоимость работы</th>
+          <th>Название
+              <Sort type="name" :direction="sortType == 'name' ? sortDirection : 0" @sort="setSort"></Sort>
+              <FilterVal v-model="filters.tasks"></FilterVal></th>
+          <th>Исполнитель
+              <Sort type="user" :direction="sortType == 'user' ? sortDirection : 0" @sort="setSort"></Sort>
+              <FilterVal v-model="filters.users"></FilterVal></th>
+          <th>Затраченное время в часах
+              <Sort type="time" :direction="sortType == 'time' ? sortDirection : 0" @sort="setSort"></Sort>
+          </th>
+          <th>Стоимость работы
+              <Sort type="price" :direction="sortType == 'price' ? sortDirection : 0" @sort="setSort"></Sort>
+          </th>
           <th>Действия</th>
+          </tr>
       </thead>
 
       <tbody>
-          <template v-for="( row, num) in tasks">
+          <template v-for="( row, num) in showTesks">
             <TableShowRow v-if="!row.isEdit" :num="num" :row="row"
-                          :user="getUser(row.user_id )" @setedit="setEdit"></TableShowRow>
+                          :user="getUser(row.user_id )" @setedit="setEdit" @remove="removeItem"></TableShowRow>
 
             <TableEditRow v-else v-model="row" :num="num" :user="getUser(row.user_id )" :users="users"></TableEditRow>
           </template>
+
+          <tr v-if="!isSaved">
+              <td colspan="6">
+                  <btn @click="newItem">Новый</btn>
+              </td>
+          </tr>
       </tbody>
     </table>
 
@@ -29,16 +45,30 @@
     import 'whatwg-fetch';
     import TableShowRow from './components/TableShowRow';
     import TableEditRow from './components/TableEditRow';
+    import { Btn } from 'uiv';
+    import FilterVal from './components/Filter';
+    import FilterData from './lib/FilterData';
+    import Sort from './components/Sort';
+    import SortData from './lib/SortData';
+
 
     export default {
   name: 'App',
   components: {
-     TableShowRow, TableEditRow
+     TableShowRow, TableEditRow, Btn, FilterVal, Sort
   }
   , data(){
       return {
           tasks: [ ]
           , users: [ ]
+
+          , filters: {
+              tasks: '',
+              users: ''
+          }
+
+          , sortType: ''
+          , sortDirection: 0
       }
     }
     , created(){
@@ -81,8 +111,29 @@
           }
       }
 
+      , setSort( type, direction ){
+          this.sortType = type;
+          this.sortDirection = direction;
+      }
+
       , setEdit( taskId ){
           this.tasks.filter((item) => (item.id == taskId))[0].isEdit = true;
+      }
+
+      , removeItem( taskId ){
+          console.log('removeItem', taskId);
+          this.tasks = this.tasks.filter((item) => (item.id != taskId));
+
+      }
+
+      , newItem(){
+          this.tasks.push({
+              id: 0,
+              isEdit: true,
+              name: '',
+              user_id: "",
+              time: 0
+          });
       }
 
       , sendRows(e){
@@ -100,9 +151,14 @@
     }
 
     , computed: {
-      isSaved(){
-          return this.tasks.filter((item) => (item.isEdit === true)).length > 0;
-      }
+            isSaved() {
+                return this.tasks.filter((item) => (item.isEdit === true)).length > 0;
+            }
+
+            , showTesks() {
+                return SortData( FilterData( this.tasks, this.filters, this.users ),
+                    this.sortType, this.sortDirection, this.users );
+            }
         }
 }
 </script>
@@ -117,7 +173,8 @@
   margin-top: 60px;
 }
   th {
-    text-align: center;
+      text-align: center;
+      vertical-align: middle !important;
   }
   body {
     padding: 1em;
